@@ -62,36 +62,58 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(el);
     });
 
-    // --- Contact Form Submission (Mailto Fallback for Local Files) ---
+    // --- Contact Form Submission (AJAX FormSubmit) ---
     const contactForm = document.querySelector('.contact-form');
     if (contactForm) {
         contactForm.addEventListener('submit', (e) => {
             e.preventDefault(); // Prevent page reload
             
-            // Get form values
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const message = document.getElementById('message').value;
-            
-            // Construct email body
-            const subject = encodeURIComponent(`Portfolio Contact from ${name}`);
-            const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
-            
-            // Open default email client
-            window.location.href = `mailto:aymanebari99@gmail.com?subject=${subject}&body=${body}`;
-            
-            // Visual feedback for the button
             const btn = contactForm.querySelector('button');
             const originalText = btn.textContent;
-            btn.textContent = 'Opening Email Client...';
-            btn.style.background = 'linear-gradient(45deg, #27c93f, #00b09b)';
             
-            // Reset form and button after a delay
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.style.background = '';
+            // Visual feedback
+            btn.textContent = 'Sending...';
+            btn.style.opacity = '0.7';
+            btn.disabled = true;
+
+            const formData = new FormData(contactForm);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch("https://formsubmit.co/ajax/aymanebari99@gmail.com", {
+                method: "POST",
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                btn.textContent = 'Message Sent Successfully!';
+                btn.style.background = 'linear-gradient(45deg, #27c93f, #00b09b)';
+                btn.style.opacity = '1';
+                
+                // Reset form
                 contactForm.reset();
-            }, 3000);
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                btn.textContent = 'Error Sending';
+                btn.style.background = '#ff5f56';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 3000);
+            });
         });
     }
 
